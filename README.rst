@@ -10,9 +10,15 @@ Decorate any task you have and create a SQSAsyncEnv object:
 
 .. code::
 
-    @async_sqs.register()
-    def send_message(to, subject, body)
-        print(f"Send message '{body}' to '{subject}'")
+    >>> import async_sqs.tasks import register
+    >>> @register
+    ... def message(name):
+    ...     print(f"Hello {name}")
+    >>>
+    >>> message.delay(args=("World",))
+
+
+.. code::
 
     >>> from async_sqs import SQSAsyncEnv
     >>> sqs = SQSAsyncEnv()  # this register all tasks. autodiscover=True

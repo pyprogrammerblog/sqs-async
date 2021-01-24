@@ -1,9 +1,14 @@
 
 import abc
+import boto3
+
+from async_sqs.backoff_policies import DEFAULT_BACKOFF
+from async_sqs.backoff_policies import BackoffPolicy
 
 
 class AbstractQueue(abc.ABC):
     name: str
+    queue: abc.ABC
 
     def add_job(self):
         raise NotImplementedError
@@ -23,26 +28,26 @@ class AbstractQueue(abc.ABC):
 
 class Queue(AbstractQueue):
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(
+            self,
+            name: str,
+            queue = None,
+            backoff_policy: BackoffPolicy = DEFAULT_BACKOFF
+    ) -> None:
+        self.queue_name = name
+        self.queue = queue
+        self.backoff_policy = backoff_policy
 
-    def add_job(
-        self,
-        job_name,
-        _content_type=codecs.DEFAULT_CONTENT_TYPE,
-        _delay_seconds=None,
-        _deduplication_id=None,
-        _group_id=None,
-        **job_kwargs
-    ):
+        # if queue was not provided, get or create queue by name
+        if not self.queue:
+            sqs = boto3.resource('sqs')
+            try:
+                self.queue = sqs.get_queue_by_name(QueueName=self.queue_name)
+            except Exception:
+                self.queue = sqs.create_queue(QueueName=self.queue_name)
+
+    def add_job(self):
         """
         Add job to the queue.
         """
-        return q.add_job(
-            job_name,
-            _content_type=_content_type,
-            _delay_seconds=_delay_seconds,
-            _deduplication_id=_deduplication_id,
-            _group_id=_group_id,
-            **job_kwargs
-        )
+        return self.queue.send_message()
