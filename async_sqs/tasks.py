@@ -17,12 +17,26 @@ def register(
 
     Examples:
 
-    >>> import async_sqs.tasks import register
-    >>> @register
-    ... def message(name):
+    >>> import async_sqs import tasks
+    >>>
+    >>> @tasks.register
+    ... def message(name):              # a message is any task decorate
     ...     print(f"Hello {name}")
     >>>
-    >>> message.delay(args=("World",))
+    >>> message.delay(args=("World",))  # this is converted into an awaitable like below
+    >>>
+    >>> import asyncio
+    >>>
+    >>> @tasks.register
+    ... async def message(name):
+    ...     await asyncio.sleep(1)
+    >>>
+    >>> message.delay(queue=queue, args=("World",))
+    >>> message.delay(args=("World",))  # this goes to default queue
+    >>>
+    >>> from async_sqs.sqs_env import SQSEnv
+    >>> queue = SQSEnv().queue("messages")
+    >>> queue.process_queue()   # this run async event loop, all is manage as coroutines
     """
 
     def decorator(func):
@@ -69,7 +83,7 @@ class AsyncTask:
         """
         Run the task asynchronously.
         """
-        queue = self.queue or Queue(queue or DEFAULT_QUEUE_NAME)
+        queue = self.queue or queue or Queue(DEFAULT_QUEUE_NAME)
 
         if not kwargs:
             kwargs = {}
@@ -88,6 +102,15 @@ class AsyncTask:
         to it.
         """
         return BakedAsyncTask(self, args, kwargs)
+
+
+class DistrubuteTask:
+    pass
+
+
+class DistrubuteCorroutineTask:
+    pass
+
 
 
 class BakedAsyncTask(object):
