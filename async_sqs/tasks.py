@@ -1,7 +1,8 @@
+import asyncio
+
 from typing import Callable
 import functools
 from datetime import timedelta
-import settings
 
 from async_sqs.queues import AbstractQueue, Queue
 from async_sqs.settings import DEFAULT_QUEUE_NAME
@@ -9,7 +10,6 @@ from async_sqs.settings import DEFAULT_QUEUE_NAME
 
 def register(
         queue: AbstractQueue = None,
-        name: str = None,
         delayed: timedelta = None
 ):
     """
@@ -43,7 +43,7 @@ def register(
         @functools.wraps(func)
         def wrapper_register():
             return AsyncTask(
-                job_name=name or func.__name__,
+                job_name=func.__name__,
                 processor=func,
                 queue=queue,
                 delayed=delayed
@@ -77,7 +77,10 @@ class AsyncTask:
         """
         Run the task synchronously.
         """
-        return self.processor(*args, **kwargs)
+        if asyncio.iscoroutinefunction(self.processor):
+            return asyncio.run(self.processor(*args, **kwargs))
+        else:
+            return self.processor(*args, **kwargs)
 
     def delay(self, queue: str = None, args: tuple = None, kwargs: dict = None):
         """
@@ -104,15 +107,6 @@ class AsyncTask:
         return BakedAsyncTask(self, args, kwargs)
 
 
-class DistrubuteTask:
-    pass
-
-
-class DistrubuteCorroutineTask:
-    pass
-
-
-
 class BakedAsyncTask(object):
     def __init__(self, async_task, args, kwargs):
         self.async_task = async_task
@@ -128,12 +122,3 @@ class BakedAsyncTask(object):
     def __repr__(self):
         return f"BakedAsyncTask({self.async_task}, ...)"
 
-
-if __name__ == "__main__":
-
-    @register()
-    def message(name):
-        print(f"Hola {name}")
-
-    message.delay(queue='queue-test', args=("Jose",))
-    message("Jose")

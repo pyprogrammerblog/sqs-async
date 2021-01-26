@@ -8,7 +8,6 @@ from async_sqs.backoff_policies import BackoffPolicy
 
 class AbstractQueue(abc.ABC):
     name: str
-    queue: abc.ABC
 
     def add_job(self):
         raise NotImplementedError

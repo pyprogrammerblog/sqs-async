@@ -1,2 +1,4 @@
 # Project exclude paths
 /venv/
+test_project
+.env

@@ -2,6 +2,7 @@ import abc
 import multiprocessing
 import warnings
 from typing import TYPE_CHECKING, Dict, Optional, Type, Union
+from inspect import getmembers, isfunction
 from async_sqs.queues import Queue
 from async_sqs.backoff_policies import DEFAULT_BACKOFF
 
@@ -22,16 +23,14 @@ class AbstractSQSEnv(abc.ABC):
 
 class SQSEnv(AbstractSQSEnv):
 
-    def __init__(self, session, queue_prefix):
-        self.session = boto3.client('sqs')
+    def __init__(self, queue_prefix: str = ""):
+        self.session = boto3.client('sqs', region_name='eu-west-1')
         self.queue_prefix = queue_prefix
         self.backoff_policy = DEFAULT_BACKOFF
         self.processor_maker = None
         self.context_maker = None
         self.context = None
         self.queues = None
-        self.sqs_client = self.session.client("sqs")
-        self.sqs_resource = self.session.resource("sqs")
 
     def get_queue(self, name: str):
         raise NotImplementedError
@@ -44,6 +43,14 @@ class SQSEnv(AbstractSQSEnv):
 
     def delete_queue(self):
         raise NotImplementedError
+
+    @property
+    def registered_tasks(self):
+        from inspect import getmembers, isfunction
+        from my_project import my_module
+
+        return [o for o in getmembers(module) if isfunction(o[1])]
+
 
     def queue(
         self,
