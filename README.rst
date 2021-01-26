@@ -10,13 +10,26 @@ Decorate any task you have and create a SQSAsyncEnv object:
 
 .. code::
 
-    >>> import async_sqs.tasks import register
-    >>> @register
-    ... def message(name):
+    >>> import async_sqs import tasks
+    >>>
+    >>> @tasks.register
+    ... def message(name):              # a message is any task decorate
     ...     print(f"Hello {name}")
     >>>
-    >>> message.delay(args=("World",))
-
+    >>> message.delay(args=("World",))  # this is converted into an awaitable like below
+    >>>
+    >>> import asyncio
+    >>>
+    >>> @tasks.register
+    ... async def message(name):
+    ...     await asyncio.sleep(1)
+    >>>
+    >>> message.delay(queue=queue, args=("World",))
+    >>> message.delay(args=("World",))  # this goes to default queue
+    >>>
+    >>> from async_sqs.sqs_env import SQSEnv
+    >>> queue = SQSEnv().queue("messages")
+    >>> queue.process_queue()   # this run async event loop, all is manage as coroutines
 
 .. code::
 
