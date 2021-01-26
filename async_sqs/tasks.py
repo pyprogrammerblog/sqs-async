@@ -121,4 +121,3 @@ class BakedAsyncTask(object):
 
     def __repr__(self):
         return f"BakedAsyncTask({self.async_task}, ...)"
-

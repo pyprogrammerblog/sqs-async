@@ -12,10 +12,10 @@ class AbstractQueue(abc.ABC):
     def add_job(self):
         raise NotImplementedError
 
-    def process_queue(self):
+    def process_all(self, verbose, keep_alive, processes):
         raise NotImplementedError
 
-    def process_batch(self):
+    def process_batch(self, filter: dict):
         raise NotImplementedError
 
     def process_message(self):
@@ -26,7 +26,6 @@ class AbstractQueue(abc.ABC):
 
 
 class Queue(AbstractQueue):
-
     def __init__(
             self,
             name: str,

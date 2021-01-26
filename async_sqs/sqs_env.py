@@ -51,6 +51,8 @@ class SQSEnv(AbstractSQSEnv):
 
         return [o for o in getmembers(module) if isfunction(o[1])]
 
+    def process_queues(self):
+        pass
 
     def queue(
         self,
