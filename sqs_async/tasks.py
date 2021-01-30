@@ -4,8 +4,8 @@ from typing import Callable
 import functools
 from datetime import timedelta
 
-from async_sqs.queues import AbstractQueue, Queue
-from async_sqs.settings import DEFAULT_QUEUE_NAME
+from sqs_async.queues import AbstractQueue
+from sqs_async.settings import DEFAULT_QUEUE_NAME
 
 
 def register(
@@ -17,9 +17,10 @@ def register(
 
     Examples:
 
-    >>> import async_sqs import tasks
+    >>> import sqs_async import tasks
+    >>> import sqs_async.sqs_env import SQSAsyncEnv
     >>>
-    >>> @tasks.register
+    >>> @tasks.register()
     ... def message(name):              # a message is any task decorate
     ...     print(f"Hello {name}")
     >>>
@@ -34,8 +35,8 @@ def register(
     >>> message.delay(queue=queue, args=("World",))
     >>> message.delay(args=("World",))  # this goes to default queue
     >>>
-    >>> from async_sqs.sqs_env import SQSEnv
-    >>> queue = SQSEnv().queue("messages")
+    >>> from sqs_async.sqs_env import SQSEnv
+    >>> queue = SQSAsyncEnv().queue("messages")
     >>> queue.process_queue()   # this run async event loop, all is manage as coroutines
     """
 
@@ -43,7 +44,8 @@ def register(
         @functools.wraps(func)
         def wrapper_register():
             return AsyncTask(
-                job_name=func.__name__,
+                task_name=func.__name__,
+                location=f"{func.__module__}.{func.__name__}",
                 processor=func,
                 queue=queue,
                 delayed=delayed
@@ -56,12 +58,14 @@ class AsyncTask:
 
     def __init__(
             self,
-            job_name: str,
+            task_name: str,
+            location: str,
             processor: Callable,
             queue: AbstractQueue = None,
             delayed: timedelta = None,
     ) -> None:
-        self.job_name = job_name
+        self.task_name = task_name
+        self.location = location
         self.processor = processor
         self.queue = queue
         self.delayed = delayed
@@ -71,7 +75,7 @@ class AsyncTask:
         self.run(*args, **kwargs)
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}.{self.job_name}>"
+        return f"<{self.__class__.__name__} at {self.location}>"
 
     def run(self, *args, **kwargs):
         """
@@ -82,11 +86,12 @@ class AsyncTask:
         else:
             return self.processor(*args, **kwargs)
 
-    def delay(self, queue: str = None, args: tuple = None, kwargs: dict = None):
+    def delay(self, queue: AbstractQueue = None, args: tuple = None, kwargs: dict = None):
         """
         Run the task asynchronously.
         """
-        queue = self.queue or queue or Queue(DEFAULT_QUEUE_NAME)
+        assert self.queue or queue, "Queue is not defined."
+        queue = self.queue or queue
 
         if not kwargs:
             kwargs = {}

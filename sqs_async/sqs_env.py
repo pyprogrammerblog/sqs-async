@@ -1,12 +1,16 @@
 import abc
-import multiprocessing
-import warnings
-from typing import TYPE_CHECKING, Dict, Optional, Type, Union
-from inspect import getmembers, isfunction
-from async_sqs.queues import Queue
-from async_sqs.backoff_policies import DEFAULT_BACKOFF
+
+from typing import Union, List, Optional, TYPE_CHECKING
+from sqs_async.queues import GenericQueue
+from sqs_async.backoff_policies import DEFAULT_BACKOFF
+from sqs_async.utils.imports import get_async_tasks
 
 import boto3
+
+AnyQueue = Union[GenericQueue]
+
+if TYPE_CHECKING:
+    from sqs_workers.backoff_policies import BackoffPolicy
 
 
 class AbstractSQSEnv(abc.ABC):
@@ -23,14 +27,18 @@ class AbstractSQSEnv(abc.ABC):
 
 class SQSEnv(AbstractSQSEnv):
 
-    def __init__(self, queue_prefix: str = ""):
-        self.session = boto3.client('sqs', region_name='eu-west-1')
+    def __init__(self, task_modules: List[str], queue_prefix: str = ""):
+
+        self.registered_tasks = get_async_tasks(task_modules)
+
         self.queue_prefix = queue_prefix
+        self.queues = {}
         self.backoff_policy = DEFAULT_BACKOFF
-        self.processor_maker = None
-        self.context_maker = None
-        self.context = None
-        self.queues = None
+
+        # aws related
+        self.session = boto3
+        self.sqs_client = self.session.client("sqs")
+        self.sqs_resource = self.session.resource("sqs")
 
     def get_queue(self, name: str):
         raise NotImplementedError
@@ -44,26 +52,24 @@ class SQSEnv(AbstractSQSEnv):
     def delete_queue(self):
         raise NotImplementedError
 
-    @property
-    def registered_tasks(self):
-        from inspect import getmembers, isfunction
-        from my_project import my_module
-
-        return [o for o in getmembers(module) if isfunction(o[1])]
-
     def process_queues(self):
         pass
 
     def queue(
         self,
         queue_name: str,
-        backoff_policy=None,
-    ):
+        queue_maker: AnyQueue = GenericQueue,
+        backoff_policy: Optional[BackoffPolicy] = None,
+    ) -> GenericQueue:
+
         """
         Get a queue object, initializing it with queue_maker if necessary.
         """
         if queue_name not in self.queues:
             backoff_policy = backoff_policy or self.backoff_policy
-            queue = Queue(name=queue_name, backoff_policy=backoff_policy)
-            self.queues[queue_name] = queue
+            self.queues[queue_name] = queue_maker(
+                env=self,
+                name=queue_name,
+                backoff_policy=backoff_policy
+            )
         return self.queues[queue_name]
