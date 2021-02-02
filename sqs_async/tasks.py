@@ -5,7 +5,6 @@ import functools
 from datetime import timedelta
 
 from sqs_async.queues import AbstractQueue
-from sqs_async.settings import DEFAULT_QUEUE_NAME
 
 
 def register(queue: AbstractQueue = None, delayed: timedelta = None):

@@ -9,6 +9,7 @@ from sqs_async.queues import GenericQueue
 from sqs_async.backoff_policies import DEFAULT_BACKOFF
 from sqs_async.utils.imports import get_async_tasks
 from botocore.exceptions import ClientError
+from sqs_async.shutdown_policies import NeverShutdown
 
 
 if TYPE_CHECKING:

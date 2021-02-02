@@ -16,7 +16,7 @@ SEND_BATCH_SIZE = 10
 logger = logging.getLogger()
 
 if TYPE_CHECKING:
-    from sqs_workers import SQSEnv
+    from sqs_async.sqs_env import SQSEnv
 
 
 class AbstractQueue(abc.ABC):
