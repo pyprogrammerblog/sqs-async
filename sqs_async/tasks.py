@@ -86,22 +86,32 @@ class AsyncTask:
         else:
             return self.processor(*args, **kwargs)
 
-    def delay(self, queue: AbstractQueue = None, args: tuple = None, kwargs: dict = None):
+    def delay(
+            self,
+            delay_seconds=None,
+            queue: AbstractQueue=None,
+            content_type=None,
+            deduplication_id=None,
+            group_id=None,
+            kwargs: dict = None
+    ):
         """
         Run the task asynchronously.
         """
-        assert self.queue or queue, "Queue is not defined."
         queue = self.queue or queue
+        assert self.queue, "Queue is not defined."
 
         if not kwargs:
             kwargs = {}
 
-        _content_type = kwargs.pop("_content_type", None)
-        _delay_seconds = kwargs.pop("_delay_seconds", self.delayed)
-        _deduplication_id = kwargs.pop("_deduplication_id", None)
-        _group_id = kwargs.pop("_group_id", None)
-
-        return queue.add_job()
+        return queue.add_job(
+            self.task_name,
+            content_type=content_type,
+            delay_seconds=delay_seconds,
+            deduplication_id=deduplication_id,
+            group_id=group_id,
+            kwargs=kwargs,
+        )
 
     def bake(self, *args, **kwargs):
         """
