@@ -10,10 +10,13 @@ from sqs_async.backoff_policies import DEFAULT_BACKOFF
 from sqs_async.utils.imports import get_async_tasks
 from botocore.exceptions import ClientError
 from sqs_async.shutdown_policies import NeverShutdown
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv(raise_error_if_not_found=True))
 
 
 if TYPE_CHECKING:
-    from sqs_workers.backoff_policies import BackoffPolicy
+    from sqs_async.backoff_policies import BackoffPolicy
 
 logger = logging.getLogger(__name__)
 
