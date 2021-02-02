@@ -7,7 +7,7 @@ import multiprocessing
 from typing import List, TYPE_CHECKING
 from sqs_async.queues import GenericQueue
 from sqs_async.backoff_policies import DEFAULT_BACKOFF
-from sqs_async.utils.imports import get_async_tasks
+from sqs_async.utils.imports import get_registered_tasks
 from botocore.exceptions import ClientError
 from sqs_async.shutdown_policies import NeverShutdown
 from dotenv import load_dotenv, find_dotenv
@@ -39,7 +39,7 @@ class AbstractSQSEnv(abc.ABC):
 class SQSEnv(AbstractSQSEnv):
     def __init__(self, task_modules: List[str], queue_prefix: str = ""):
 
-        self.registered_tasks = get_async_tasks(task_modules)
+        self.registered_tasks = get_registered_tasks(task_modules)
 
         self.queue_prefix = queue_prefix
         self.queues = {}

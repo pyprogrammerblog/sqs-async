@@ -11,7 +11,7 @@ def isasynctask(object):
     return isinstance(object, AsyncTask)
 
 
-def get_async_tasks(locations: List, file_name: str = "tasks"):
+def get_registered_tasks(locations: List[str], file_name: str = "tasks"):
     """
 
     :param file_name:
