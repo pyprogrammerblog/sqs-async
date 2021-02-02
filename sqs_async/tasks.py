@@ -8,10 +8,7 @@ from sqs_async.queues import AbstractQueue
 from sqs_async.settings import DEFAULT_QUEUE_NAME
 
 
-def register(
-        queue: AbstractQueue = None,
-        delayed: timedelta = None
-):
+def register(queue: AbstractQueue = None, delayed: timedelta = None):
     """
     Regirter functions as SQS async functions
 
@@ -48,21 +45,22 @@ def register(
                 location=f"{func.__module__}.{func.__name__}",
                 processor=func,
                 queue=queue,
-                delayed=delayed
+                delayed=delayed,
             )
+
         return wrapper_register()
+
     return decorator
 
 
 class AsyncTask:
-
     def __init__(
-            self,
-            task_name: str,
-            location: str,
-            processor: Callable,
-            queue: AbstractQueue = None,
-            delayed: timedelta = None,
+        self,
+        task_name: str,
+        location: str,
+        processor: Callable,
+        queue: AbstractQueue = None,
+        delayed: timedelta = None,
     ) -> None:
         self.task_name = task_name
         self.location = location
@@ -87,13 +85,13 @@ class AsyncTask:
             return self.processor(*args, **kwargs)
 
     def delay(
-            self,
-            delay_seconds=None,
-            queue: AbstractQueue=None,
-            content_type=None,
-            deduplication_id=None,
-            group_id=None,
-            kwargs: dict = None
+        self,
+        delay_seconds=None,
+        queue: AbstractQueue = None,
+        content_type=None,
+        deduplication_id=None,
+        group_id=None,
+        kwargs: dict = None,
     ):
         """
         Run the task asynchronously.

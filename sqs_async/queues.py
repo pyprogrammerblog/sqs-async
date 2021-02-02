@@ -48,12 +48,12 @@ class AbstractQueue(abc.ABC):
 
 class GenericQueue(AbstractQueue):
     def __init__(
-            self,
-            env,  # type: SQSEnv
-            name: str,
-            backoff_policy: BackoffPolicy = DEFAULT_BACKOFF,
+        self,
+        env,  # type: SQSEnv
+        name: str,
+        backoff_policy: BackoffPolicy = DEFAULT_BACKOFF,
     ) -> None:
-        self.env = env,
+        self.env = (env,)
         self.queue_name = name
         self.backoff_policy = backoff_policy
         self.sqs_queue = None  # type: boto3.resources.factory.sqs.Queue
@@ -63,10 +63,10 @@ class GenericQueue(AbstractQueue):
         try:
             self.sqs_queue = sqs.get_queue_by_name(QueueName=prefixed_name)
         except ClientError as e:
-            if 'NonExistentQueue' in e.response['Error']['Code']:
+            if "NonExistentQueue" in e.response["Error"]["Code"]:
                 self.sqs_queue = sqs.create_queue(QueueName=prefixed_name)
             else:
-                warnings.warn("Client error %d", e.response['Error']['Message'])
+                warnings.warn("Client error %d", e.response["Error"]["Message"])
 
     def add_job(
         self,
@@ -133,4 +133,4 @@ class GenericQueue(AbstractQueue):
         ("low level") name by simply prefixing it. Used to create namespaces
         for different environments (development, staging, production, etc)
         """
-        return "{}{}".format(self.env.queue_prefix, self.queue_name)
+        return self.env.get_sqs_queue_name(self.sqs_queue)

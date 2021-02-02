@@ -11,7 +11,7 @@ def isasynctask(object):
     return isinstance(object, AsyncTask)
 
 
-def get_async_tasks(locations: List, file_name: str = 'tasks'):
+def get_async_tasks(locations: List, file_name: str = "tasks"):
     """
 
     :param file_name:
@@ -25,6 +25,6 @@ def get_async_tasks(locations: List, file_name: str = 'tasks'):
         full_location = f"{location}.{file_name}"
         module = importlib.import_module(full_location)
         members = dict(getmembers(module, isasynctask))
-        tasks.update({f'{full_location}.{k}': v for k, v in members.items()})
+        tasks.update({f"{full_location}.{k}": v for k, v in members.items()})
 
     return tasks

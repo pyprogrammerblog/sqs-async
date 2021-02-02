@@ -41,7 +41,6 @@ class AWS:
 
 
 class Session:
-
     def __init__(self):
         self.aws = AWS()
 
@@ -55,7 +54,6 @@ class Session:
 
 
 class Client:
-
     def __init__(self):
         self.aws = AWS()
 
@@ -76,7 +74,6 @@ class Client:
 
 
 class ServiceResource:
-
     def __init__(self):
         self.aws = AWS()
 
@@ -218,6 +215,4 @@ class Message:
             delay_seconds_int = int(kwargs["DelaySeconds"])
             execute_at += datetime.timedelta(seconds=delay_seconds_int)
 
-        return Message(
-            queue_impl, body, message_atttributes, attributes, execute_at
-        )
+        return Message(queue_impl, body, message_atttributes, attributes, execute_at)
