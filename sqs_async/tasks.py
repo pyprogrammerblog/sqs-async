@@ -31,7 +31,7 @@ def register(queue: AbstractQueue = None, delayed: timedelta = None):
     Hello World!
     >>>
     >>> from sqs_async.sqs_env import SQSEnv
-    >>> sqs_env = SQSEnv(task_modules=['message_module'])            # create sqs env
+    >>> sqs_env = SQSEnv(task_modules=['message_module'])          # create sqs env
     >>> message_queue = sqs_env.queue("message_queue")             # get or create a queue
     >>>
     >>> message.delay(queue=message_queue, args=("World",))        # send task to the queue as a coroutine
