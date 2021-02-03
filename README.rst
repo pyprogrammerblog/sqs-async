@@ -57,7 +57,7 @@ We now process messages.
     >>> message_queue = sqs_env.queue("message_queue")
     >>>
     >>> queue.process_queue()                               # finally you can process a queue in an event loop, or
-    >>> env.process_queues(queue_names=["message_queue"])   # some of them, (multiprocessing)
+    >>> env.process_queues(queue_names=["message_queue"])   # some of them, (multiprocessing, each an event loop)
     >>> env.process_queues(queue_names=["*"])               # or all of them
 
 
