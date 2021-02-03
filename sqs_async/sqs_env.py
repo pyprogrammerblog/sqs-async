@@ -4,7 +4,7 @@ import boto3
 import warnings
 import multiprocessing
 
-from typing import List, TYPE_CHECKING
+from typing import List, Union, TYPE_CHECKING
 from sqs_async.queues import GenericQueue
 from sqs_async.backoff_policies import DEFAULT_BACKOFF
 from sqs_async.utils.imports import get_registered_tasks
@@ -98,7 +98,7 @@ class SQSEnv(AbstractSQSEnv):
         for p in processes:
             p.join()
 
-    def queue_exist(self, queue_name):
+    def queue_exist(self, queue_name: str, raise_error=False) -> Union[bool, None]:
         try:
             prefixed_name = self.get_sqs_queue_name(queue_name)
             self.sqs_client.get_queue_by_name(QueueName=prefixed_name)
@@ -106,6 +106,10 @@ class SQSEnv(AbstractSQSEnv):
         except ClientError as e:
             if "NonExistentQueue" in e.response["Error"]["Code"]:
                 return False
+            elif raise_error:
+                raise
+            else:
+                warnings.warn("Client error %d", e.response["Error"]["Message"])
 
     def get_all_known_queues(self):
         resp = self.sqs_client.list_queues(**{"QueueNamePrefix": self.queue_prefix})

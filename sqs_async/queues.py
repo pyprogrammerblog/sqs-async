@@ -52,11 +52,12 @@ class GenericQueue(AbstractQueue):
         env,  # type: SQSEnv
         name: str,
         backoff_policy: BackoffPolicy = DEFAULT_BACKOFF,
+        raise_error=False
     ) -> None:
-        self.env = (env,)
+        self.env = env
         self.queue_name = name
         self.backoff_policy = backoff_policy
-        self.sqs_queue = None  # type: boto3.resources.factory.sqs.Queue
+        self.sqs_queue = None,
 
         sqs = env.sqs_resource
         prefixed_name = self.get_sqs_queue_name()
@@ -65,8 +66,11 @@ class GenericQueue(AbstractQueue):
         except ClientError as e:
             if "NonExistentQueue" in e.response["Error"]["Code"]:
                 self.sqs_queue = sqs.create_queue(QueueName=prefixed_name)
+            elif raise_error:
+                raise
             else:
                 warnings.warn("Client error %d", e.response["Error"]["Message"])
+
 
     def add_job(
         self,

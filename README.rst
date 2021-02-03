@@ -55,9 +55,9 @@ We now process messages.
 .. code::
 
     >>> from sqs_async.sqs_env import SQSEnv
-    >>> sqs_env = SQSEnv(task_modules=['message_module'])
+    >>> sqs_env = SQSEnv(task_modules=["message_module"])
     >>> message_queue = sqs_env.queue("message_queue")
     >>>
     >>> queue.process_queue()                                       # finally you can process a queue in an event loop, or
     >>> sqs_env.process_queues(queue_names=["message_queue"])       # some of them, (multiprocessing, each an event loop)
-    >>> sqs_env.process_queues(queue_names=["*"])              # or all of them
+    >>> sqs_env.process_queues(queue_names=["*"])                   # or all of them
