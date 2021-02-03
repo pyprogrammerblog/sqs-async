@@ -13,27 +13,38 @@ def register(queue: AbstractQueue = None, delayed: timedelta = None):
 
     Examples:
 
-    >>> import sqs_async import tasks
-    >>> import sqs_async.sqs_env import SQSAsyncEnv
-    >>>
-    >>> @tasks.register()
-    ... def message(name):              # a message is any task decorate
-    ...     print(f"Hello {name}")
-    >>>
-    >>> message.delay(args=("World",))  # this is converted into an awaitable like below
-    >>>
+    >>> from sqs_async import tasks
     >>> import asyncio
     >>>
     >>> @tasks.register
-    ... async def message(name):
-    ...     await asyncio.sleep(1)
+    ... def message(name):
+    ...     print(f"Hello {name}")
     >>>
-    >>> message.delay(queue=queue, args=("World",))
-    >>> message.delay(args=("World",))  # this goes to default queue
+    >>> @tasks.register
+    ... async def async_message(name):
+    ...     await asyncio.sleep(1)
+    ...     print(f"Hello {name}")
+    >>>
+    >>> message("World!")
+    Hello World!
+    >>> async_message("World!")
+    Hello World!
     >>>
     >>> from sqs_async.sqs_env import SQSEnv
-    >>> queue = SQSAsyncEnv().queue("messages")
-    >>> queue.process_queue()   # this run async event loop, all is manage as coroutines
+    >>> sqs_env = SQSEnv(task_modules=['message_module'])            # create sqs env
+    >>> message_queue = sqs_env.queue("message_queue")             # get or create a queue
+    >>>
+    >>> message.delay(queue=message_queue, args=("World",))        # send task to the queue as a coroutine
+    >>>
+    >>> async_message.delay(queue=message_queue, args=("World",))  # send task to the queue as a coroutine
+    >>>
+    >>> from sqs_async.sqs_env import SQSEnv
+    >>> sqs_env = SQSEnv(task_modules=['message_module'])
+    >>> message_queue = sqs_env.queue("message_queue")
+    >>>
+    >>> queue.process_queue()                                       # finally you can process a queue in an event loop, or
+    >>> sqs_env.process_queues(queue_names=["message_queue"])       # some of them, (multiprocessing, each an event loop)
+    >>> sqs_env.process_queues(queue_names=["*"])                   # or all of them
     """
 
     def decorator(func):

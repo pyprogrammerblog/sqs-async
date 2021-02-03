@@ -12,7 +12,7 @@ will wrap them into an asyncio coroutine.
 
 .. code::
 
-    >>> from async_sqs import tasks
+    >>> from sqs_async import tasks
     >>> import asyncio
     >>>
     >>> @tasks.register
@@ -32,7 +32,6 @@ They can be also called normally as we see.
     Hello World!
     >>> async_message("World!")
     Hello World!
-    >>>
 
 
 Now we create a SQSEnv to handle operations in the sqs environment. The parameter `task_modules`
@@ -41,8 +40,8 @@ for further processing.
 
 .. code::
 
-    >>> from async_sqs.sqs_env import SQSEnv
-    >>> sqs_env = SQSEnv(task_modules='message_module')            # create sqs env
+    >>> from sqs_async.sqs_env import SQSEnv
+    >>> sqs_env = SQSEnv(task_modules=['message_module'])          # create sqs env
     >>> message_queue = sqs_env.queue("message_queue")             # get or create a queue
     >>>
     >>> message.delay(queue=message_queue, args=("World",))        # send task to the queue as a coroutine
@@ -55,10 +54,10 @@ We now process messages.
 
 .. code::
 
-    >>> from async_sqs.sqs_env import SQSEnv
-    >>> sqs_env = SQSEnv(task_modules='message_module')
+    >>> from sqs_async.sqs_env import SQSEnv
+    >>> sqs_env = SQSEnv(task_modules=['message_module'])
     >>> message_queue = sqs_env.queue("message_queue")
     >>>
-    >>> queue.process_queue()                               # finally you can process a queue in an event loop, or
-    >>> env.process_queues(queue_names=["message_queue"])   # some of them, (multiprocessing, each an event loop)
-    >>> env.process_queues(queue_names=["*"])               # or all of them
+    >>> queue.process_queue()                                       # finally you can process a queue in an event loop, or
+    >>> sqs_env.process_queues(queue_names=["message_queue"])       # some of them, (multiprocessing, each an event loop)
+    >>> sqs_env.process_queues(queue_names=["*"])              # or all of them
