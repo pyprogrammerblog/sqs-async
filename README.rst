@@ -22,12 +22,15 @@ will wrap them into an asyncio coroutine.
     >>> @tasks.register
     ... async def async_message(name):
     ...     await asyncio.sleep(1)
+    ...     print(f"Hello {name}")
 
 They can be also called normally as we see.
 
 .. code::
 
     >>> message("World!")
+    Hello World!
+    >>> async_message("World!")
     Hello World!
     >>>
 
@@ -59,12 +62,3 @@ We now process messages.
     >>> queue.process_queue()                               # finally you can process a queue in an event loop, or
     >>> env.process_queues(queue_names=["message_queue"])   # some of them, (multiprocessing, each an event loop)
     >>> env.process_queues(queue_names=["*"])               # or all of them
-
-
-It is important this difference...
-
-.. code::
-
-    >>> from async_tasks import send_message
-    >>> send_message.delay(queue, args, kwargs)      # this add into the queue the task
-    >>> send_message(args, kwargs)                   # this run the task as normal method
