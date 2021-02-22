@@ -1,2 +1,4 @@
 # Project exclude paths
 /venv/
+sqs_async/test_project
+.env
