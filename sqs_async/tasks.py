@@ -1,8 +1,7 @@
 import asyncio
-
-from typing import Callable
 import functools
 from datetime import timedelta
+from typing import Callable
 
 from sqs_async.queues import AbstractQueue
 
@@ -31,20 +30,20 @@ def register(queue: AbstractQueue = None, delayed: timedelta = None):
     Hello World!
     >>>
     >>> from sqs_async.sqs_env import SQSEnv
-    >>> sqs_env = SQSEnv(task_modules=['message_module'])          # create sqs env
-    >>> message_queue = sqs_env.queue("message_queue")             # get or create a queue
+    >>> sqs_env = SQSEnv(task_modules=['message_module'])
+    >>> message_queue = sqs_env.queue("message_queue")
     >>>
-    >>> message.delay(queue=message_queue, args=("World",))        # send task to the queue as a coroutine
+    >>> message.delay(queue=message_queue, args=("World",))
     >>>
-    >>> async_message.delay(queue=message_queue, args=("World",))  # send task to the queue as a coroutine
+    >>> async_message.delay(queue=message_queue, args=("World",))
     >>>
     >>> from sqs_async.sqs_env import SQSEnv
     >>> sqs_env = SQSEnv(task_modules=['message_module'])
     >>> message_queue = sqs_env.queue("message_queue")
     >>>
-    >>> queue.process_queue()                                       # finally you can process a queue in an event loop, or
-    >>> sqs_env.process_queues(queue_names=["message_queue"])       # some of them, (multiprocessing, each an event loop)
-    >>> sqs_env.process_queues(queue_names=["*"])                   # or all of them
+    >>> queue.process_queue()
+    >>> sqs_env.process_queues(queue_names=["message_queue"])
+    >>> sqs_env.process_queues(queue_names=["*"])
     """
 
     def decorator(func):

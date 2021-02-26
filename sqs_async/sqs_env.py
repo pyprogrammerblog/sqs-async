@@ -1,16 +1,16 @@
 import abc
 import logging
-import boto3
-import warnings
 import multiprocessing
+import warnings
+from typing import TYPE_CHECKING, List, Union
 
-from typing import List, Union, TYPE_CHECKING
-from sqs_async.queues import GenericQueue
-from sqs_async.backoff_policies import DEFAULT_BACKOFF
-from sqs_async.utils.imports import get_registered_tasks
+import boto3
 from botocore.exceptions import ClientError
+from dotenv import find_dotenv, load_dotenv
+from sqs_async.backoff_policies import DEFAULT_BACKOFF
+from sqs_async.queues import GenericQueue
 from sqs_async.shutdown_policies import NeverShutdown
-from dotenv import load_dotenv, find_dotenv
+from sqs_async.utils.imports import get_registered_tasks
 
 load_dotenv(find_dotenv(raise_error_if_not_found=True))
 
@@ -72,7 +72,9 @@ class SQSEnv(AbstractSQSEnv):
         except ClientError as e:
             warnings.warn("Unknown error. %s", e.response["Error"]["Message"])
 
-    def process_queues(self, queue_names=None, shutdown_policy_maker=NeverShutdown):
+    def process_queues(
+        self, queue_names=None, shutdown_policy_maker=NeverShutdown
+    ):
         """
         Use multiprocessing to process multiple queues at once. If queue names
         are not set, process all known queues
@@ -98,7 +100,9 @@ class SQSEnv(AbstractSQSEnv):
         for p in processes:
             p.join()
 
-    def queue_exist(self, queue_name: str, raise_error=False) -> Union[bool, None]:
+    def queue_exist(
+        self, queue_name: str, raise_error=False
+    ) -> Union[bool, None]:
         try:
             prefixed_name = self.get_sqs_queue_name(queue_name)
             self.sqs_client.get_queue_by_name(QueueName=prefixed_name)
@@ -109,10 +113,14 @@ class SQSEnv(AbstractSQSEnv):
             elif raise_error:
                 raise
             else:
-                warnings.warn("Client error %d", e.response["Error"]["Message"])
+                warnings.warn(
+                    "Client error %d", e.response["Error"]["Message"]
+                )
 
     def get_all_known_queues(self):
-        resp = self.sqs_client.list_queues(**{"QueueNamePrefix": self.queue_prefix})
+        resp = self.sqs_client.list_queues(
+            **{"QueueNamePrefix": self.queue_prefix}
+        )
         if "QueueUrls" not in resp:
             return []
         urls = resp["QueueUrls"]

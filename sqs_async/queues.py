@@ -1,13 +1,11 @@
 import abc
 import logging
 import warnings
-import boto3
-
-from sqs_async import codecs
 from typing import TYPE_CHECKING
+
 from botocore.exceptions import ClientError
-from sqs_async.backoff_policies import DEFAULT_BACKOFF
-from sqs_async.backoff_policies import BackoffPolicy
+from sqs_async import codecs
+from sqs_async.backoff_policies import DEFAULT_BACKOFF, BackoffPolicy
 
 DEFAULT_MESSAGE_GROUP_ID = "default"
 SEND_BATCH_SIZE = 10
@@ -52,12 +50,12 @@ class GenericQueue(AbstractQueue):
         env,  # type: SQSEnv
         name: str,
         backoff_policy: BackoffPolicy = DEFAULT_BACKOFF,
-        raise_error=False
+        raise_error=False,
     ) -> None:
         self.env = env
         self.queue_name = name
         self.backoff_policy = backoff_policy
-        self.sqs_queue = None,
+        self.sqs_queue = (None,)
 
         sqs = env.sqs_resource
         prefixed_name = self.get_sqs_queue_name()
@@ -69,8 +67,9 @@ class GenericQueue(AbstractQueue):
             elif raise_error:
                 raise
             else:
-                warnings.warn("Client error %d", e.response["Error"]["Message"])
-
+                warnings.warn(
+                    "Client error %d", e.response["Error"]["Message"]
+                )
 
     def add_job(
         self,
@@ -117,7 +116,10 @@ class GenericQueue(AbstractQueue):
         kwargs = {
             "MessageBody": message_body,
             "MessageAttributes": {
-                "ContentType": {"StringValue": content_type, "DataType": "String"},
+                "ContentType": {
+                    "StringValue": content_type,
+                    "DataType": "String",
+                },
                 "JobName": {"StringValue": job_name, "DataType": "String"},
             },
         }

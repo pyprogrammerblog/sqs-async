@@ -1,7 +1,7 @@
 import time
 
-from sqs_workers.core import BatchProcessingResult
-from sqs_workers.shutdown_policies import (
+from sqs_async.core import BatchProcessingResult
+from sqs_async.shutdown_policies import (
     AndShutdown,
     IdleShutdown,
     MaxTasksShutdown,

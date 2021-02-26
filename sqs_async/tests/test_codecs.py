@@ -1,6 +1,5 @@
 import pytest
-
-from sqs_workers.codecs import JSONCodec, PickleCodec
+from sqs_async.codecs import JSONCodec, PickleCodec
 
 
 @pytest.mark.parametrize("codec", [PickleCodec, JSONCodec])

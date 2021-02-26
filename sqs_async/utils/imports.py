@@ -1,7 +1,7 @@
 import importlib
-
-from typing import List
 from inspect import getmembers
+from typing import List
+
 from sqs_async.tasks import AsyncTask
 
 

@@ -13,12 +13,13 @@ ineffectively.
   and if the time hasn't come yet, the task is put back.
 - API can return slightly different results
 
-Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html
+Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference
+/services/sqs.html
 """
 import datetime
 import uuid
-from typing import Any, Dict, List
 from dataclasses import dataclass
+from typing import Any, Dict, List
 
 
 class AWS:
@@ -27,12 +28,12 @@ class AWS:
     """
 
     def __init__(self):
-        self.client = Client()
+        self.client = ServiceClient()
         self.resource = ServiceResource()
-        self.queues = ["MemoryQueue"]
+        self.queues: List[Queue] = []
 
-    def create_queue(self, QueueName, Attributes):
-        queue = Queue(self, QueueName, Attributes)
+    def create_queue(self, QueueName):
+        queue = Queue(queue_name=QueueName)
         self.queues.append(queue)
         return queue
 
@@ -42,23 +43,23 @@ class AWS:
 
 class Session:
     def __init__(self):
-        self.aws = AWS()
+        self.aws: AWS = AWS()
 
-    def client(self, service_name):
+    def client(self, service_name: str):
         assert service_name == "sqs"
         return self.aws.client
 
-    def resource(self, service_name):
+    def resource(self, service_name: str):
         assert service_name == "sqs"
         return self.aws.resource
 
 
-class Client:
+class ServiceClient:
     def __init__(self):
-        self.aws = AWS()
+        self.aws: AWS = AWS()
 
-    def create_queue(self, QueueName, Attributes):
-        return self.aws.create_queue(QueueName, Attributes)
+    def create_queue(self, QueueName):
+        return self.aws.create_queue(QueueName)
 
     def delete_queue(self, QueueUrl):
         return self.aws.delete_queue(QueueUrl)
@@ -77,14 +78,16 @@ class ServiceResource:
     def __init__(self):
         self.aws = AWS()
 
-    def create_queue(self, QueueName, Attributes):
-        return self.aws.create_queue(QueueName, Attributes)
+    def create_queue(self, QueueName):
+        return self.aws.create_queue(QueueName)
 
     def get_queue_by_name(self, QueueName):
-        for queue in self.aws.queues:
-            if queue.name == QueueName:
-                return queue
-        return None
+        try:
+            return next(
+                queue for queue in self.aws.queues if queue.name == QueueName
+            )
+        except StopIteration:
+            return
 
 
 class Queue:
@@ -99,7 +102,7 @@ class Queue:
         self.aws = AWS()
         self.name = queue_name
         self.attributes = None
-        self.messages = [Message()]
+        self.messages: List[Message] = []
 
     @property
     def url(self):
@@ -111,12 +114,12 @@ class Queue:
         return {"MessageId": message.message_id, "SequenceNumber": 0}
 
     def send_messages(self, Entries):
-        res = []
-        for message in Entries:
-            res.append(self.send_message(**message))
+        res = [self.send_message(**message) for message in Entries]
         return {"Successful": res, "Failed": []}
 
-    def receive_messages(self, WaitTimeSeconds="0", MaxNumberOfMessages="10", **kwargs):
+    def receive_messages(
+        self, WaitTimeSeconds="0", MaxNumberOfMessages="10", **kwargs
+    ):
         """
         Helper function which returns at most max_messages from the
         queue. Used in an infinite loop inside `get_raw_messages`
@@ -131,7 +134,10 @@ class Queue:
             seconds=wait_seconds
         )
         for message in self.messages:
-            if message.execute_at > threshold or len(ready_messages) >= max_messages:
+            if (
+                message.execute_at > threshold
+                or len(ready_messages) >= max_messages
+            ):
                 push_back_messages.append(message)
             else:
                 ready_messages.append(message)
@@ -182,7 +188,7 @@ class Message:
          services/sqs.html#SQS.Message
     """
 
-    queue_impl: Queue
+    queue: Queue
     body: bytes
     message_attributes: Dict[str, Dict[str, str]]
     attributes: Dict[str, Any]
@@ -191,7 +197,7 @@ class Message:
     receipt_handle: str = uuid.uuid4().hex
 
     @classmethod
-    def from_kwargs(cls, queue_impl, kwargs):
+    def from_kwargs(cls, queue, kwargs):
         """
         Make a message from kwargs, as provided by queue.send_message():
 
@@ -205,7 +211,9 @@ class Message:
         # optional attributes
         attributes = {"ApproximateReceiveCount": 1}
         if "MessageDeduplicationId" in kwargs:
-            attributes["MessageDeduplicationId"] = kwargs["MessageDeduplicationId"]
+            attributes["MessageDeduplicationId"] = kwargs[
+                "MessageDeduplicationId"
+            ]
 
         if "MessageGroupId" in kwargs:
             attributes["MessageGroupId"] = kwargs["MessageGroupId"]
@@ -215,4 +223,6 @@ class Message:
             delay_seconds_int = int(kwargs["DelaySeconds"])
             execute_at += datetime.timedelta(seconds=delay_seconds_int)
 
-        return Message(queue_impl, body, message_atttributes, attributes, execute_at)
+        return Message(
+            queue, body, message_atttributes, attributes, execute_at
+        )
